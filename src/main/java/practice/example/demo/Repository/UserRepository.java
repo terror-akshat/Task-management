@@ -7,6 +7,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 }
 
-
 // That will give you access to the following methods for free:
 // save()findById()findAll()deleteById

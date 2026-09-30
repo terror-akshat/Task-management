@@ -2,7 +2,8 @@ package practice.example.demo.Controller;
 
 import org.springframework.web.bind.annotation.*;
 
-import practice.example.demo.Entity.User;
+import practice.example.demo.dto.UserRequest;
+import practice.example.demo.dto.UserResponse;
 import practice.example.demo.service.UserService;
 
 @RestController
@@ -15,7 +16,8 @@ public class UserController {
         this.userService = userService;
     }
 
-    public User createUser(@RequestBody User user) {
+    @PostMapping
+    public UserResponse createUser(@RequestBody UserRequest user) {
         return userService.createUser(user);
     }
 
@@ -26,7 +28,7 @@ public class UserController {
 
     @GetMapping("/get/{id}")
     public String getUserById(@PathVariable Long id) {
-        User user = userService.getUserById(id);
+        UserResponse user = userService.getUserById(id);
         if (user != null) {
             return user.toString();
         } else {

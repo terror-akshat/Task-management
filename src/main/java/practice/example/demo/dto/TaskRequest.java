@@ -6,9 +6,11 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import practice.example.demo.Entity.TaskStatus;
 
-
-@Data 
+@Data
 public class TaskRequest {
+
+    @NotNull(message = "User ID is required")
+    private Long userId;
 
     @NotBlank(message = "Title is required")
     @Size(min = 3, max = 100, message = "Title must be between 3 and 100 characters")
@@ -16,7 +18,6 @@ public class TaskRequest {
 
     @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
-
 
     @NotNull(message = "Status is required")
     private TaskStatus status;

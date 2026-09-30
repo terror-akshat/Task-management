@@ -1,4 +1,4 @@
-package practice.example.demo.Entity;
+package practice.example.demo.dto;
 
 import java.util.List;
 
@@ -6,11 +6,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import practice.example.demo.Entity.Task;
 
-@Entity
-@Table(name = "users")
 @Data
-public class User {
+public class UserRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

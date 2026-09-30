@@ -3,9 +3,6 @@ package practice.example.demo.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
 @Entity
 @Data
 @Table(name = "tasks")
@@ -21,4 +18,8 @@ public class Task {
 
     @Enumerated(EnumType.STRING)
     private TaskStatus status;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }
