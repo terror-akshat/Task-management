@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
+import practice.example.demo.Entity.TaskStatus;
 import practice.example.demo.dto.TaskRequest;
 import practice.example.demo.dto.TaskResponse;
 import practice.example.demo.service.TaskService;
@@ -20,8 +21,9 @@ public class TaskController {
     }
 
     @PostMapping
-    public TaskResponse createTask(@Valid @RequestBody TaskRequest task) {
-        return taskService.createTask(task);
+    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest task) {
+        TaskResponse createdTask = taskService.createTask(task);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
     }
 
     @GetMapping
@@ -37,6 +39,16 @@ public class TaskController {
     @GetMapping("/user/{userId}")
     public List<TaskResponse> getTaskByUserId(@PathVariable Long userId) {
         return taskService.getTaskByUserId(userId);
+    }
+
+    @GetMapping("/user/{userId}/status/{status}")
+    public List<TaskResponse> getTaskByUserIdAndStatus(@PathVariable Long userId, @PathVariable TaskStatus status) {
+        return taskService.getTaskByUserIdAndStatus(userId, status);
+    }
+
+    @GetMapping("/status/{status}")
+    public List<TaskResponse> getTaskByStatus(@PathVariable TaskStatus status) {
+        return taskService.getTaskByStatus(status);
     }
 
     @DeleteMapping("/{id}")

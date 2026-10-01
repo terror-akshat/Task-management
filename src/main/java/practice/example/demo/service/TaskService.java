@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import practice.example.demo.Entity.Task;
+import practice.example.demo.Entity.TaskStatus;
 import practice.example.demo.Entity.User;
 import practice.example.demo.Exception.TaskNotFoundException;
 import practice.example.demo.Exception.UserNotFoundException;
@@ -13,6 +14,7 @@ import practice.example.demo.Repository.TaskRepository;
 import practice.example.demo.Repository.UserRepository;
 import practice.example.demo.dto.TaskRequest;
 import practice.example.demo.dto.TaskResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TaskService {
@@ -24,6 +26,7 @@ public class TaskService {
         this.taskRepository = taskRepository;
     }
 
+    @Transactional
     public TaskResponse createTask(TaskRequest task) {
         User user = userRepository.findById(task.getUserId())
                 .orElseThrow(() -> new TaskNotFoundException("User not found with ID: " + task.getUserId()));
@@ -66,10 +69,20 @@ public class TaskService {
         return convertToTaskResponse(task);
     }
 
+    public List<TaskResponse> getTaskByStatus(TaskStatus status) {
+        return taskRepository.findByStatus(status).stream().map(this::convertToTaskResponse).toList();
+    }
+
+    public List<TaskResponse> getTaskByUserIdAndStatus(Long userId, TaskStatus status) {
+        return taskRepository.findByUserIdAndStatus(userId, status).stream().map(this::convertToTaskResponse).toList();
+    }
+
+    @Transactional
     public void deleteTaskById(Long id) {
         taskRepository.deleteById(id);
     }
 
+    @Transactional
     public TaskResponse updateTask(Long id, TaskRequest updatedTask) {
         return taskRepository.findById(id).map(task -> {
             task.setTitle(updatedTask.getTitle());
