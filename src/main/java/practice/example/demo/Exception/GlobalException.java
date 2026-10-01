@@ -18,8 +18,7 @@ public class GlobalException {
                         TaskNotFoundException ex,
                         HttpServletRequest request) {
 
-                ApiError error = new ApiError(
-                                LocalDateTime.now(),
+                ApiError error = new ApiError(LocalDateTime.now(),
                                 HttpStatus.NOT_FOUND.value(),
                                 "Not Found",
                                 ex.getMessage(),

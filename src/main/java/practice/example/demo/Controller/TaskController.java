@@ -2,6 +2,8 @@ package practice.example.demo.Controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import practice.example.demo.Entity.TaskStatus;
@@ -27,38 +29,39 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<TaskResponse> getAllTasks() {
-        return taskService.getAllTasks();
+    public ResponseEntity<List<TaskResponse>> getAllTasks() {
+        return ResponseEntity.ok(taskService.getAllTasks());
     }
 
     @GetMapping("/{id}")
-    public TaskResponse getTaskById(@PathVariable Long id) {
-        return taskService.getTaskById(id);
+    public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id) {
+        return ResponseEntity.ok(taskService.getTaskById(id));
     }
 
     @GetMapping("/user/{userId}")
-    public List<TaskResponse> getTaskByUserId(@PathVariable Long userId) {
-        return taskService.getTaskByUserId(userId);
+    public ResponseEntity<List<TaskResponse>> getTaskByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(taskService.getTaskByUserId(userId));
     }
 
     @GetMapping("/user/{userId}/status/{status}")
-    public List<TaskResponse> getTaskByUserIdAndStatus(@PathVariable Long userId, @PathVariable TaskStatus status) {
-        return taskService.getTaskByUserIdAndStatus(userId, status);
+    public ResponseEntity<List<TaskResponse>> getTaskByUserIdAndStatus(@PathVariable Long userId, @PathVariable TaskStatus status) {
+        return ResponseEntity.ok(taskService.getTaskByUserIdAndStatus(userId, status));
     }
 
     @GetMapping("/status/{status}")
-    public List<TaskResponse> getTaskByStatus(@PathVariable TaskStatus status) {
-        return taskService.getTaskByStatus(status);
+    public ResponseEntity<List<TaskResponse>> getTaskByStatus(@PathVariable TaskStatus status) {
+        return ResponseEntity.ok(taskService.getTaskByStatus(status));
     }
 
     @DeleteMapping("/{id}")
-    public String deleteTaskById(@PathVariable Long id) {
+    public ResponseEntity<String> deleteTaskById(@PathVariable Long id) {
         taskService.deleteTaskById(id);
-        return "Task with ID " + id + " has been deleted.";
+        return ResponseEntity.ok("Task with ID " + id + " has been deleted.");
     }
 
     @PutMapping("/{id}")
-    public TaskResponse updateTask(@PathVariable Long id, @Valid @RequestBody TaskRequest updatedTask) {
-        return taskService.updateTask(id, updatedTask);
+    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @Valid @RequestBody TaskRequest updatedTask) {
+        TaskResponse updatedTaskResponse = taskService.updateTask(id, updatedTask);
+        return ResponseEntity.ok(updatedTaskResponse);
     }
 }

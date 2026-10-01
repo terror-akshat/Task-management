@@ -40,7 +40,6 @@ public class UserService {
         response.setId(user.getId());
         response.setName(user.getName());
         response.setEmail(user.getEmail());
-        response.setPassword(user.getPassword());
         response.setTasks(user.getTasks());
         return response;
     }
