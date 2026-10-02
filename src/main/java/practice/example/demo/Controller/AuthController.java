@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import practice.example.demo.Entity.User;
 import practice.example.demo.dto.AuthResponse;
+import practice.example.demo.dto.LoginRequest;
+import practice.example.demo.dto.LoginResponse;
 import practice.example.demo.dto.UserRequest;
 import practice.example.demo.service.AuthService;
 
@@ -27,10 +29,15 @@ public class AuthController {
     public ResponseEntity<AuthResponse> Register(@Valid @RequestBody UserRequest user) {
         User newUser = authService.Resgister(user);
         AuthResponse response = new AuthResponse(
-            newUser.getId(),
-            newUser.getEmail(),
-            newUser.getName()
-        );
+                newUser.getId(),
+                newUser.getName(),
+                newUser.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
 }
