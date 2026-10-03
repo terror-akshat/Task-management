@@ -3,6 +3,7 @@ package practice.example.demo.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import practice.example.demo.Entity.Task;
@@ -16,10 +17,17 @@ import practice.example.demo.dto.TaskRequest;
 import practice.example.demo.dto.TaskResponse;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.security.core.Authentication;
+
 @Service
 public class TaskService {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
+
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (User) authentication.getPrincipal();
+    }
 
     public TaskService(UserRepository userRepository, TaskRepository taskRepository) {
         this.userRepository = userRepository;
@@ -28,9 +36,10 @@ public class TaskService {
 
     @Transactional
     public TaskResponse createTask(TaskRequest task) {
-        User user = userRepository.findById(task.getUserId())
-                .orElseThrow(() -> new TaskNotFoundException("User not found with ID: " + task.getUserId()));
-
+        // User user = userRepository.findById(task.getUserId())
+        // .orElseThrow(() -> new TaskNotFoundException("User not found with ID: " +
+        // task.getUserId()));
+        User user = getAuthenticatedUser();
         Task newTask = new Task();
         newTask.setTitle(task.getTitle());
         newTask.setDescription(task.getDescription());
@@ -54,18 +63,33 @@ public class TaskService {
     }
 
     public List<TaskResponse> getTaskByUserId(Long userId) {
-        if (!userRepository.existsById(userId)) {
+        // if (!userRepository.existsById(userId)) {
+        // throw new UserNotFoundException(
+        // "User not found with id: " + userId);
+        // }
+        // List<Task> tasks = taskRepository.findByUserId(userId);
+        // return
+        // tasks.stream().map(this::convertToTaskResponse).collect(Collectors.toList());
+
+        User user = getAuthenticatedUser();
+        if (!userRepository.existsById(user.getId())) {
             throw new UserNotFoundException(
-                    "User not found with id: " + userId);
+                    "User not found with id: " + user.getId());
         }
-        List<Task> tasks = taskRepository.findByUserId(userId);
-        return tasks.stream().map(this::convertToTaskResponse).collect(Collectors.toList());
+        return taskRepository.findByUserId(user.getId()).stream().map(this::convertToTaskResponse)
+                .collect(Collectors.toList());
     }
 
     public TaskResponse getTaskById(Long id) {
+        // Task task = taskRepository.findById(id)
+        // .orElseThrow(() -> new TaskNotFoundException("Task not found with ID: " +
+        // id));
+        User user = getAuthenticatedUser();
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with ID: " + id));
-
+        if (!task.getUser().getId().equals(user.getId())) {
+            throw new TaskNotFoundException("Task not found with ID: " + id);
+        }
         return convertToTaskResponse(task);
     }
 

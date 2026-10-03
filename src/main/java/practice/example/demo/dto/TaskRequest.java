@@ -9,9 +9,6 @@ import practice.example.demo.Entity.TaskStatus;
 @Data
 public class TaskRequest {
 
-    @NotNull(message = "User ID is required")
-    private Long userId;
-
     @NotBlank(message = "Title is required")
     @Size(min = 3, max = 100, message = "Title must be between 3 and 100 characters")
     private String title;

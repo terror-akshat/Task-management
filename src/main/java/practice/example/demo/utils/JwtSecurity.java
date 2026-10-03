@@ -11,7 +11,6 @@ import io.jsonwebtoken.Claims;
 
 import javax.crypto.SecretKey;
 
-
 @Component
 public class JwtSecurity {
 
@@ -22,7 +21,7 @@ public class JwtSecurity {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expiration = expiration;
     }
-    
+
     public String generateToken(Long userId, String email) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expiration);
