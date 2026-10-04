@@ -28,7 +28,7 @@ pipeline {
       steps {
         sh 'docker pull "$IMAGE:$TAG"'
         sh 'docker rm -f taks-manager || true'
-        sh 'docker run -d --name taks-manager -p 5000:5000 "$IMAGE:$TAG"'
+        sh 'docker run -d --name taks-manager -p 8000:8000 "$IMAGE:$TAG"'
 
         sh '''
           cat > deploy-info-$BUILD_NUMBER.txt <<EOF
