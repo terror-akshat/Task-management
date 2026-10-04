@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import practice.example.demo.Entity.User;
+import practice.example.demo.Entity.UserRole;
 import practice.example.demo.Repository.UserRepository;
 import practice.example.demo.dto.UserResponse;
 import practice.example.demo.dto.UserRequest;
@@ -23,6 +24,7 @@ public class UserService {
         newUser.setName(user.getName());
         newUser.setEmail(user.getEmail());
         newUser.setPassword(user.getPassword());
+        newUser.setRole(UserRole.USER);
         User savedUser = userRepository.save(newUser);
         return convertToResponse(savedUser);
     }

@@ -20,6 +20,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    private UserRole role;
+
     @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<Task> tasks;

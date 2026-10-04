@@ -45,12 +45,13 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
-        String token = jwtSecret.generateToken(user.getId(), user.getEmail());
+        String token = jwtSecret.generateToken(user.getId(), user.getEmail(), user.getRole());
         LoginResponse response = new LoginResponse();
         response.setId(user.getId());
         response.setName(user.getName());
         response.setEmail(user.getEmail());
         response.setToken(token);
+        response.setRole(user.getRole());
         return response;
     }
 }

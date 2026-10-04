@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import practice.example.demo.Entity.UserRole;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import io.jsonwebtoken.Claims;
@@ -22,11 +24,11 @@ public class JwtSecurity {
         this.expiration = expiration;
     }
 
-    public String generateToken(Long userId, String email) {
+    public String generateToken(Long userId, String email, UserRole role) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expiration);
 
-        return Jwts.builder().subject(email).claim("userId", userId).issuedAt(now).expiration(expiry)
+        return Jwts.builder().subject(email).claim("userId", userId).claim("role", role).issuedAt(now).expiration(expiry)
                 .signWith(secretKey).compact();
     }
 
