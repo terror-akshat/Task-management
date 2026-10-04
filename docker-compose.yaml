@@ -1,0 +1,26 @@
+service:
+  db:
+  image: postgres:15.3-alpine
+  environment:
+    POSTGRES_USER: task_app
+    POSTGRES_PASSWORD: password
+    POSTGRES_DB: task_management
+  volumes:
+    - db_data:/var/lib/postgresql/data
+  ports: 
+    - "5432:5432"
+  healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    image: docker.io/akshat615/akshat-task-manager
+    environment:
+      DATABASE_URL: jdbc:postgresql://task_app:password@db:5432/task_management
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy

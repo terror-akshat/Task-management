@@ -2,8 +2,9 @@ pipeline {
   agent any
 
   environment {
-    IMAGE = 'docker.io/akshat615/akshat-task-manager'   
-    TAG   = "${env.BUILD_NUMBER}"                  
+    IMAGE  = 'docker.io/akshat615/akshat-task-manager'
+    TAG    = "${env.BUILD_NUMBER}"
+    DB_URL = 'jdbc:postgresql://host.docker.internal:5432/task_management'
   }
 
   stages {
@@ -26,19 +27,28 @@ pipeline {
 
     stage('deploy') {
       steps {
-        sh 'docker pull "$IMAGE:$TAG"'
-        sh 'docker rm -f taks-manager || true'
-        sh 'docker run -d --name taks-manager -p 8000:8000 "$IMAGE:$TAG"'
+        withCredentials([usernamePassword(credentialsId: 'postgres-db',
+          usernameVariable: 'SPRING_DATASOURCE_USERNAME',
+          passwordVariable: 'SPRING_DATASOURCE_PASSWORD')]) {
+          sh 'docker rm -f task-manager || true'
+          sh '''
+            docker run -d --name task-manager -p 8000:8000 \
+              -e SPRING_DATASOURCE_URL="$DB_URL" \
+              -e SPRING_DATASOURCE_USERNAME \
+              -e SPRING_DATASOURCE_PASSWORD \
+              "$IMAGE:$TAG"
+          '''
+        }
 
         sh '''
-          cat > deploy-info-$BUILD_NUMBER.txt <<EOF
-            build: $BUILD_NUMBER
-            image: $IMAGE:$TAG
-            commit: ${GIT_COMMIT}
-            branch: $GIT_BRANCH
-            time: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-            url: $BUILD_URL
-            EOF
+cat > deploy-info-$BUILD_NUMBER.txt <<EOF
+build: $BUILD_NUMBER
+image: $IMAGE:$TAG
+commit: $GIT_COMMIT
+branch: $GIT_BRANCH
+time: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+url: $BUILD_URL
+EOF
         '''
         archiveArtifacts artifacts: "deploy-info-${BUILD_NUMBER}.txt", fingerprint: true
       }
@@ -46,13 +56,19 @@ pipeline {
 
     stage('test') {
       steps {
-        sh 'sleep 2; curl -s http://localhost:5000 || true'
-      }
-    }
-
-    stage('cleanup') {
-      steps {
-        cleanWs()
+        sh '''
+          for i in $(seq 1 15); do
+            if curl -s -o /dev/null http://host.docker.internal:8000; then
+              echo "App is up"
+              exit 0
+            fi
+            echo "Waiting for app... ($i)"
+            sleep 2
+          done
+          echo "App did not start. Container logs:"
+          docker logs --tail 50 task-manager
+          exit 1
+        '''
       }
     }
   }
@@ -60,6 +76,10 @@ pipeline {
   post {
     success { echo "Build ${env.BUILD_NUMBER} succeeded" }
     failure { echo "Build ${env.BUILD_NUMBER} failed" }
-    always  { echo "Build ${env.BUILD_NUMBER} finished" }
+    always  {
+      sh 'docker logout || true'
+      cleanWs()
+      echo "Build ${env.BUILD_NUMBER} finished"
+    }
   }
 }
