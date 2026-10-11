@@ -24,7 +24,7 @@ services:
       SPRING_DATASOURCE_USERNAME: task_user
       SPRING_DATASOURCE_PASSWORD: password
     ports:
-      - "8000:8000"
+      - "8001:8000"
     depends_on:
       db:
         condition: service_healthy
