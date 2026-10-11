@@ -1,0 +1,7 @@
+.git
+.omo
+target
+token
+Jenkinsfile
+docker-compose.yaml
+*.md

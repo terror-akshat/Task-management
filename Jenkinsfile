@@ -2,8 +2,8 @@ pipeline {
   agent any
 
   environment {
-    IMAGE = 'docker.io/akshat615/akshat-task-manager'   
-    TAG   = "${env.BUILD_NUMBER}"                  
+    IMAGE = 'docker.io/akshat615/akshat-task-manager'
+    TAG   = "${env.BUILD_NUMBER}"
   }
 
   stages {
@@ -20,25 +20,27 @@ pipeline {
           sh 'echo "$DOCKERHUB_PWD" | docker login -u "$DOCKERHUB_USER" --password-stdin'
           sh 'docker push "$IMAGE:$TAG"'
           sh 'docker push "$IMAGE:latest"'
+          sh 'docker logout'
         }
       }
     }
 
     stage('deploy') {
       steps {
-        sh 'docker pull "$IMAGE:$TAG"'
-        sh 'docker rm -f taks-manager || true'
-        sh 'docker run -d --name taks-manager -p 8000:8000 "$IMAGE:$TAG"'
+        // Remove a container left over from the old `docker run` deploy
+        sh 'docker rm -f task-manager || true'
+        // Starts Postgres + app together; IMAGE/TAG come from the environment block
+        sh 'docker compose up -d --no-build'
 
         sh '''
-          cat > deploy-info-$BUILD_NUMBER.txt <<EOF
-            build: $BUILD_NUMBER
-            image: $IMAGE:$TAG
-            commit: ${GIT_COMMIT}
-            branch: $GIT_BRANCH
-            time: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-            url: $BUILD_URL
-            EOF
+cat > deploy-info-$BUILD_NUMBER.txt <<EOF
+build: $BUILD_NUMBER
+image: $IMAGE:$TAG
+commit: ${GIT_COMMIT}
+branch: $GIT_BRANCH
+time: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+url: $BUILD_URL
+EOF
         '''
         archiveArtifacts artifacts: "deploy-info-${BUILD_NUMBER}.txt", fingerprint: true
       }
@@ -46,13 +48,18 @@ pipeline {
 
     stage('test') {
       steps {
-        sh 'sleep 2; curl -s http://localhost:5000 || true'
-      }
-    }
-
-    stage('cleanup') {
-      steps {
-        cleanWs()
+        // Poll /health from inside the app container so it works even when Jenkins runs in Docker
+        sh '''
+          for i in $(seq 1 30); do
+            if docker exec task-manager wget -qO- http://localhost:8000/health; then
+              echo; echo "App is healthy"; exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not become healthy in 60s"
+          docker compose logs app
+          exit 1
+        '''
       }
     }
   }
@@ -60,6 +67,9 @@ pipeline {
   post {
     success { echo "Build ${env.BUILD_NUMBER} succeeded" }
     failure { echo "Build ${env.BUILD_NUMBER} failed" }
-    always  { echo "Build ${env.BUILD_NUMBER} finished" }
+    always {
+      echo "Build ${env.BUILD_NUMBER} finished"
+      cleanWs()
+    }
   }
 }
