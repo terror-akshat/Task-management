@@ -1,4 +1,3 @@
-
 package practice.example.demo.utils;
 
 import org.springframework.context.annotation.Bean;
@@ -30,7 +29,7 @@ public class SpringSecurity {
 
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/tasks/**").permitAll()
+                        .requestMatchers("/health", "/api/auth/**", "/api/tasks/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(
                         jwtFilter,
