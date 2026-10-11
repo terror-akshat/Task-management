@@ -51,7 +51,7 @@ EOF
         // Poll /health from inside the app container so it works even when Jenkins runs in Docker
         sh '''
           for i in $(seq 1 30); do
-            if docker exec task-manager wget -qO- http://localhost:8000/health; then
+            if docker exec task-manager wget -qO- http://localhost:8001/health; then
               echo; echo "App is healthy"; exit 0
             fi
             sleep 2
