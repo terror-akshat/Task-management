@@ -16,18 +16,28 @@ pipeline {
     }
 
     stage('build') {
-      steps {
-        sh 'docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" .'
-      }
-    }
+  steps {
+    sh '''
+      docker build -t "$IMAGE:$TAG" .
+      if [ "$BRANCH_NAME" = "main" ]; then
+        docker tag "$IMAGE:$TAG" "$IMAGE:latest"
+      fi
+    '''
+  }
+}
 
     stage('push') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerhub',
           usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PWD')]) {
           sh 'echo "$DOCKERHUB_PWD" | docker login -u "$DOCKERHUB_USER" --password-stdin'
-          sh 'docker push "$IMAGE:$TAG"'
-          sh 'docker push "$IMAGE:latest"'
+          ssh 'docker push "$IMAGE:$TAG"'
+
+sh '''
+  if [ "$BRANCH_NAME" = "main" ]; then
+    docker push "$IMAGE:latest"
+  fi
+'''
           sh 'docker logout'
         }
       }
@@ -58,11 +68,14 @@ EOF
     }
 
     stage('test') {
+      when {
+    branch 'main'
+}
       steps {
         // Poll /health from inside the app container so it works even when Jenkins runs in Docker
         sh '''
           for i in $(seq 1 30); do
-            if docker exec task-manager wget -qO- http://localhost:8001/health; then
+            if docker compose exec -T app wget -qO- http://localhost:8001/health; then
               echo; echo "App is healthy"; exit 0
             fi
             sleep 2
