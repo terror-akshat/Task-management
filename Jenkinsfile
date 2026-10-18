@@ -3,15 +3,28 @@ pipeline {
 
   environment {
     IMAGE = 'docker.io/akshat615/akshat-task-manager'
-    TAG   = "${env.BUILD_NUMBER}"
+    TAG = 'placeholder'
   }
 
   stages {
-    stage('build') {
-      steps {
-        sh 'docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" .'
-      }
+    stage('Prepare') {
+        steps {
+            script {
+                env.TAG = "${env.BRANCH_NAME.toLowerCase().replaceAll(/[^a-z0-9_.-]/, '-')}-${env.BUILD_NUMBER}"
+            }
+        }
     }
+
+    stage('build') {
+        steps {
+            sh '''
+              docker build -t "$IMAGE:$TAG" .
+              if [ "$BRANCH_NAME" = "main" ]; then
+                docker tag "$IMAGE:$TAG" "$IMAGE:latest"
+              fi
+            '''
+  }
+}
 
     stage('push') {
       steps {
@@ -19,13 +32,20 @@ pipeline {
           usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PWD')]) {
           sh 'echo "$DOCKERHUB_PWD" | docker login -u "$DOCKERHUB_USER" --password-stdin'
           sh 'docker push "$IMAGE:$TAG"'
-          sh 'docker push "$IMAGE:latest"'
+          sh '''
+            if [ "$BRANCH_NAME" = "main" ]; then
+              docker push "$IMAGE:latest"
+            fi
+          '''
           sh 'docker logout'
         }
       }
     }
 
     stage('deploy') {
+      when {
+        branch 'main'
+      }
       steps {
         // Remove a container left over from the old `docker run` deploy
         sh 'docker rm -f task-manager || true'
@@ -47,11 +67,14 @@ EOF
     }
 
     stage('test') {
+      when {
+    branch 'main'
+}
       steps {
         // Poll /health from inside the app container so it works even when Jenkins runs in Docker
         sh '''
           for i in $(seq 1 30); do
-            if docker exec task-manager wget -qO- http://localhost:8001/health; then
+            if docker compose exec -T app wget -qO- http://localhost:8001/health; then
               echo; echo "App is healthy"; exit 0
             fi
             sleep 2
