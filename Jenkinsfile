@@ -16,13 +16,13 @@ pipeline {
     }
 
     stage('build') {
-  steps {
-    sh '''
-      docker build -t "$IMAGE:$TAG" .
-      if [ "$BRANCH_NAME" = "main" ]; then
-        docker tag "$IMAGE:$TAG" "$IMAGE:latest"
-      fi
-    '''
+        steps {
+            sh '''
+              docker build -t "$IMAGE:$TAG" .
+              if [ "$BRANCH_NAME" = "main" ]; then
+                docker tag "$IMAGE:$TAG" "$IMAGE:latest"
+              fi
+            '''
   }
 }
 
@@ -31,13 +31,12 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'dockerhub',
           usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PWD')]) {
           sh 'echo "$DOCKERHUB_PWD" | docker login -u "$DOCKERHUB_USER" --password-stdin'
-          ssh 'docker push "$IMAGE:$TAG"'
-
-sh '''
-  if [ "$BRANCH_NAME" = "main" ]; then
-    docker push "$IMAGE:latest"
-  fi
-'''
+          sh 'docker push "$IMAGE:$TAG"'
+          sh '''
+            if [ "$BRANCH_NAME" = "main" ]; then
+              docker push "$IMAGE:latest"
+            fi
+          '''
           sh 'docker logout'
         }
       }
