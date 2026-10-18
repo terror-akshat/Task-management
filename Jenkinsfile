@@ -3,10 +3,18 @@ pipeline {
 
   environment {
     IMAGE = 'docker.io/akshat615/akshat-task-manager'
-    TAG   = "${env.BUILD_NUMBER}"
+    TAG = 'placeholder'
   }
 
   stages {
+    stage('Prepare') {
+        steps {
+            script {
+                env.TAG = "${env.BRANCH_NAME.toLowerCase().replaceAll(/[^a-z0-9_.-]/, '-')}-${env.BUILD_NUMBER}"
+            }
+        }
+    }
+
     stage('build') {
       steps {
         sh 'docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" .'
@@ -26,6 +34,9 @@ pipeline {
     }
 
     stage('deploy') {
+      when {
+        branch 'main'
+      }
       steps {
         // Remove a container left over from the old `docker run` deploy
         sh 'docker rm -f task-manager || true'

@@ -8,6 +8,6 @@ public class HealthCheck {
 
     @GetMapping("/health")
     public String health() {
-        return "Server is healthy!! Now let start the coding. with full enthusiasm and energy. Let's do it.s";
+        return "Server is healthy!! Now let start the coding. with full enthusiasm and energy. Let's do this and make it great!";
     }
 }
