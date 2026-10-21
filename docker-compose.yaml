@@ -3,6 +3,7 @@ name: task-management
 services:
   db:
     image: postgres:13
+    restart: unless-stopped
     environment:
       POSTGRES_USER: task_user
       POSTGRES_PASSWORD: password
